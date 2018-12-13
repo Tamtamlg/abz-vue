@@ -51,7 +51,7 @@
               v-model="phone"
               @blur="$v.phone.$touch()"
             >
-            <span class="invalid-text" v-if="$v.phone.$error && !$v.phone.required">This field is required</span>
+            <span class="invalid-text" v-if="$v.phone.$error && !$v.phone.minLength">This field is required (min 19 characters)</span>
           </div>
         </div>
       </div>
@@ -63,12 +63,13 @@
               class="form-control registration__control" 
               id="inputPosition"
               placeholder="Select your position"
-              v-model="selectedPosition.name"
+              v-model="selectedPosition"
+              @blur="$v.selectedPosition.$touch()"
             >
             <span class="invalid-text" v-if="$v.selectedPosition.$error && !$v.selectedPosition.required">This field is required</span>
             <ul class="registration__dropdown registration-dropdown" v-if="opsenSelect">
               <li class="registration-dropdown__item" 
-                :class="{'registration-dropdown__item--selected': selectedPosition.name.toLowerCase() === item.name.toLowerCase()}" 
+                :class="{'registration-dropdown__item--selected': selectedPosition.toLowerCase() === item.name.toLowerCase()}" 
                 v-for="item in positions" :key="item.id"
                 @click.stop="changeSelectedPosition(item.name, item.id)"
               >{{item.name}}</li>
@@ -110,8 +111,7 @@
 
 <script>
 import AppSvg from '@/components/AppSvg.vue'
-import {required, email} from 'vuelidate/lib/validators'
-// import axios from 'axios'
+import {required, email, minLength} from 'vuelidate/lib/validators'
 
 export default {
   name: 'AppRegistration',
@@ -124,10 +124,7 @@ export default {
       name: '',
       email: '',
       phone: '',
-      selectedPosition: {
-        id: '',
-        name: ''
-      },
+      selectedPosition: '',
       file: '',
       positionId: ''
     }
@@ -141,7 +138,8 @@ export default {
       email
     },
     phone: {
-      required
+      required,
+      minLength: minLength(19)
     },
     selectedPosition: {
       required
@@ -167,8 +165,8 @@ export default {
       this.$v.selectedPosition.$touch()
     },
     changeSelectedPosition(position, id) {
-      this.selectedPosition.name = position;
-      this.selectedPosition.id = id;
+      this.selectedPosition = position;
+      this.positionId = id;
       this.closeSelect();
     },
     handleFileChange() {
@@ -180,29 +178,10 @@ export default {
       formData.append('name', this.name);
       formData.append('email', this.email);
       formData.append('phone', this.phone.split(' ').join('').replace('(', '').replace(')', ''));
-      formData.append('position_id', this.selectedPosition.id);
+      formData.append('position_id', this.positionId);
       formData.append('photo', this.file);
 
       this.$store.dispatch('createNewUser', formData);
-      // т.к. авторизации в проекте нет, а для регистрации нового пользователя нужен токен, получим его перед отправкой формы
-      // axios.get(this.$store.state.api + '/token')
-      //   .then(response => {
-      //     console.log('token SUCCESS!!');
-      //     let token = response.data.token;
-      //     axios.post( this.$store.state.api + '/users', formData, {
-      //       headers: {
-      //         'Token': token,
-      //         'Content-Type': 'multipart/form-data'
-      //       }
-      //     }).then(function(){
-      //       console.log('user SUCCESS!!');
-      //     }).catch(function(){
-      //       console.log('user FAILURE!!');
-      //     });
-      //   }).catch(function(){
-      //     console.log('token FAILURE!!');
-      //   });
-      
     }
   },
   created() {

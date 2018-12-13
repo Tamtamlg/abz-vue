@@ -15,7 +15,8 @@ export default new Vuex.Store({
     users: [],
     isUsersPage: true,
     activeUser: {},
-    message: ''
+    message: '',
+    error: false
   },
   mutations: {
     request(state, payload) {
@@ -46,8 +47,12 @@ export default new Vuex.Store({
       state.message = payload;
       setTimeout(() => {
         state.message = '';
+        state.error = false;
       }, 5000);
-    }
+    },
+    setError(state, payload) {
+      state.error = payload;
+    },
   },
   actions: {
     setLoading({commit}, payload) {
@@ -69,7 +74,8 @@ export default new Vuex.Store({
         commit('request', true)
       } catch (error) {
         commit('setLoading', false)
-        console.log(error)
+        commit('setError', true)
+        commit('setMessage', error.message)
       }
     },
 
@@ -88,7 +94,8 @@ export default new Vuex.Store({
         commit('request', true)
       } catch (error) {
         commit('setLoading', false)
-        console.log(error)
+        commit('setError', true)
+        commit('setMessage', error.message)
       }
     },
 
@@ -107,7 +114,8 @@ export default new Vuex.Store({
         commit('request', true)
       } catch (error) {
         commit('setLoading', false)
-        console.log(error)
+        commit('setError', true)
+        commit('setMessage', error.message)
       }
     },
 
@@ -126,7 +134,8 @@ export default new Vuex.Store({
         commit('request', true)
       } catch (error) {
         commit('setLoading', false)
-        console.log(error)
+        commit('setError', true)
+        commit('setMessage', error.message)
       }
     },
     
@@ -150,20 +159,24 @@ export default new Vuex.Store({
                 }
                 dispatch('updateUsers', {page: 1, count: 6});
               }).catch((error) => {
-                console.log(error);
+                commit('setError', true);
+                if (error.response && error.response.data && error.response.data.message) {
+                  commit('setMessage', error.response.data.message)
+                } else {
+                  commit('setMessage', error.message)
+                }
               });
             }
           }).catch((error) => {
-            console.log('error', error);
-            if (error.data.message) {
-              commit('setMessage', error.data.message)
-            }
+            commit('setError', true)
+            commit('setMessage', error.message)
           });
         commit('setLoading', false)
         commit('request', true)
       } catch (error) {
         commit('setLoading', false)
-        console.log(error)
+        commit('setError', true)
+        commit('setMessage', error.message)
       }
     },
 
