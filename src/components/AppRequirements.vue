@@ -1,5 +1,5 @@
 <template>
-  <div class="requirements" id="requirements">
+  <div class="requirements lazy-bg" id="requirements">
     <div class="container">
       <div class="row">
         <div class="col">
@@ -38,10 +38,14 @@ $font1: 'Overpass', sans-serif;
 $font2: 'Source Sans Pro', sans-serif;
 .requirements {
   min-height: 692px;
-  background: #283593 url('../assets/img/bg-2.jpg') center top no-repeat;
+  background: #283593 center top no-repeat;
+  background-size: cover;
   color: #fff;
   padding: 68px 0 52px;
   margin-bottom: 68px;
+  &.lazy-bg--loaded {
+    background-image: url('../assets/img/bg-2.jpg');
+  }
   @media (min-width: 1025px) {
     padding: 135px 0 100px;
   }

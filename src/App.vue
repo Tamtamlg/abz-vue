@@ -1,24 +1,37 @@
 <template>
-  <div id="app">
-    <AppMessage />
+  <div id="app" ref="app">
+    <AppMessage/>
     <router-view/>
   </div>
 </template>
 
 <script>
-import AppMessage from '@/components/AppMessage.vue'
+import AppMessage from "@/components/AppMessage.vue";
+import lazyloading from "@/lazyloading.js";
+import supportsWebP from "supports-webp";
 export default {
   components: {
     AppMessage
+  },
+  methods: {
+    detectWebp() {
+      if (supportsWebP) {
+        this.$refs.app.classList.add("webp");
+      }
+    }
+  },
+  mounted() {
+    this.detectWebp();
+    lazyloading();
   }
-}
+};
 </script>
 
 
 <style lang="scss">
 @import "../node_modules/bootstrap/scss/bootstrap.scss";
-$font1: 'Overpass', sans-serif;
-$font2: 'Source Sans Pro', sans-serif;
+$font1: "Overpass", sans-serif;
+$font2: "Source Sans Pro", sans-serif;
 
 #app {
   position: relative;
@@ -108,7 +121,7 @@ body {
   &:disabled,
   &:disabled:hover {
     cursor: default;
-    background:  #d7d7d7;
+    background: #d7d7d7;
     color: #8d8c8c;
   }
 }
@@ -178,7 +191,7 @@ h5 {
   opacity: 0.32;
   z-index: 102;
   @media (min-width: 992px) {
-    display: none !important
+    display: none !important;
   }
 }
 
@@ -191,4 +204,10 @@ h5 {
   opacity: 0;
 }
 
+.webp .jumbotron.lazy-bg--loaded {
+  background-image: url("assets/img/bg-1.webp") !important;
+}
+.webp .requirements.lazy-bg--loaded {
+  background-image: url("assets/img/bg-2.webp") !important;
+}
 </style>

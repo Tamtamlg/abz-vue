@@ -1,5 +1,5 @@
 <template>
-  <div class="jumbotron">
+  <div class="jumbotron lazy-bg">
     <div class="container">
       <div class="row">
         <div class="col-lg-6 col-md-7">
@@ -24,11 +24,14 @@ export default {
 $font1: 'Overpass', sans-serif;
 $font2: 'Source Sans Pro', sans-serif;
 .jumbotron {
-  background: #283593 url('../assets/img/bg-1.jpg') center top no-repeat;
+  background: #283593 center top no-repeat;
   background-size: cover;
   margin-bottom: 67px;
   border-radius: 0;
   padding: 0;
+  &.lazy-bg--loaded {
+    background-image: url('../assets/img/bg-1.jpg');
+  }
   @media (min-width: 992px) {
     margin-bottom: 135px;
   }
