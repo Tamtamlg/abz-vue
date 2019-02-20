@@ -3,13 +3,15 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import VueScrollTo from 'vue-scrollto';
-import Vuelidate from 'vuelidate';
+import VeeValidate from 'vee-validate';
 import VueMask from 'v-mask'
 
 Vue.config.productionTip = false
 
 Vue.use(VueScrollTo, {offset: -64});
-Vue.use(Vuelidate)
+Vue.use(VeeValidate, {
+  classes: true
+});
 Vue.use(VueMask);
 
 new Vue({

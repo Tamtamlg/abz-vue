@@ -11,62 +11,66 @@
     <form class="container registration__form" @submit.prevent="onSubmit">
       <div class="row registration__row">
         <div class="col-md-4 ">
-          <div class="form-group" :class="{'is-invalid': $v.name.$error}">
+          <div class="form-group" :class="{'is-invalid': errors.first('name')}">
             <label for="inputName" class="registration__lbl">Name</label>
             <input 
               type="text" 
               class="form-control registration__control" 
               id="inputName" 
               placeholder="Your name"
+              name="name"
               v-model="name"
-              @blur="$v.name.$touch()"
+              v-validate="'required'"
             >
-            <span class="invalid-text" v-if="$v.name.$error && !$v.name.required">This field is required</span>
+            <span class="invalid-text">{{ errors.first('name') }}</span>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="form-group" :class="{'is-invalid': $v.email.$error}">
+          <div class="form-group" :class="{'is-invalid': errors.first('email')}">
             <label for="inputEmail" class="registration__lbl">Email</label>
             <input 
               type="email" 
               class="form-control registration__control" 
               id="inputEmail" 
               placeholder="Your email"
+              name="email"
               v-model="email"
-              @blur="$v.email.$touch()"
+              v-validate="'required|email'"
+              data-vv-validate-on="blur"
             >
-            <span class="invalid-text" v-if="$v.email.$error && !$v.email.required">This field is required</span>
-            <span class="invalid-text" v-if="$v.email.$error && !$v.email.email">Invalid email</span>
+            <span class="invalid-text">{{ errors.first('email') }}</span>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="form-group" :class="{'is-invalid': $v.phone.$error}">
+          <div class="form-group" :class="{'is-invalid': errors.first('phone')}">
             <label for="inputPhone" class="registration__lbl">Phone</label>
             <input 
               type="tel" 
               class="form-control registration__control" 
               id="inputPhone" 
+              name="phone"
               placeholder="+38 (___)  ___ __ __"
               v-mask="'+38 (0##) ### ## ##'"
               v-model="phone"
-              @blur="$v.phone.$touch()"
+              v-validate="'required|min:19'"
             >
-            <span class="invalid-text" v-if="$v.phone.$error && !$v.phone.minLength">This field is required (min 19 characters)</span>
+            <span class="invalid-text">{{ errors.first('phone') }}</span>
           </div>
         </div>
       </div>
       <div class="row registration__row">
         <div class="col-md-6">
-          <div class="form-group registration__select" :class="{'is-invalid': $v.selectedPosition.$error}" @click="toggleSelect">
+          <div class="form-group registration__select" :class="{'is-invalid': errors.first('position')}" @click="toggleSelect">
             <input type="text" 
               readonly
               class="form-control registration__control" 
               id="inputPosition"
               placeholder="Select your position"
               v-model="selectedPosition"
-              @blur="$v.selectedPosition.$touch()"
+              name="position"
+              v-validate="'required'"
             >
-            <span class="invalid-text" v-if="$v.selectedPosition.$error && !$v.selectedPosition.required">This field is required</span>
+            <span class="invalid-text">{{ errors.first('position') }}</span>
             <ul class="registration__dropdown registration-dropdown" v-if="opsenSelect">
               <li class="registration-dropdown__item" 
                 :class="{'registration-dropdown__item--selected': selectedPosition.toLowerCase() === item.name.toLowerCase()}" 
@@ -85,10 +89,13 @@
                   class="custom-file-input" 
                   id="inputFile"
                   ref="file"
+                  name="file"
                   @change="handleFileChange()"
+                  v-validate="'required|ext:jpeg,jpg|size:5242880|mindimensions:500,500'"
                 >
-                <label class="custom-file-label registration__control" for="inputFile">
-                  <span>Upload your photo</span>
+                <label class="custom-file-label registration__control" for="inputFile" :class="{'is-invalid': errors.first('file')}">
+                  <span v-if="file && file.name">{{file.name}}</span>
+                  <span v-else>Upload your photo</span>
                   <div class="custom-file-label__btn" role="button">
                     <span class="d-none d-md-inline-block">Browse</span>
                     <AppSvg icon="upload" width="20px" height="24px" class="svg d-block d-md-none"/>
@@ -96,13 +103,13 @@
                 </label>
               </div>
             </div>
-            <small class="registration__hint">File format jpg  up to 5 MB, the minimum size of 70x70px</small>
+            <small class="registration__hint" :class="{'invalid-text': errors.first('file')}">File format jpg  up to 5 MB, the minimum size of 70x70px</small>
           </div>
         </div>
       </div>
       <div class="row">
         <div class="col d-flex">
-          <button type="submit" class="btn btn--primary registration__btn m-auto" :disabled="$v.$invalid || loading">Sign Up</button>
+          <button type="submit" class="btn btn--primary registration__btn m-auto" :disabled="!isFormValid">Sign Up</button> 
         </div>
       </div>
     </form>
@@ -111,7 +118,35 @@
 
 <script>
 import AppSvg from '@/components/AppSvg.vue'
-import {required, email, minLength} from 'vuelidate/lib/validators'
+
+// custom validator
+const minDimensionsRule = {
+  getMessage(field, [width, height], data) {
+      return (data && data.message) || `The ${field} field must be UP TO ${width} pixels by ${height} pixels.`;
+  },
+  validate(files, [width, height]) {
+    const validateImage = (file, width, height) => {
+    const URL = window.URL || window.webkitURL;
+      return new Promise(resolve => {
+        const image = new Image();
+        image.onerror = () => resolve({ valid: false });
+        image.onload = () => resolve({
+          valid: image.width >= Number(width) && image.height >= Number(height)
+        });
+
+        image.src = URL.createObjectURL(file);
+      });
+    };
+    const list = [];
+    for (let i = 0; i < files.length; i++) {
+      if (! /\.(jpg|svg|jpeg|png|bmp|gif)$/i.test(files[i].name)) {
+        return false;
+      }
+      list.push(files[i]);
+    }
+    return Promise.all(list.map(file => validateImage(file, width, height)));
+  }
+};
 
 export default {
   name: 'AppRegistration',
@@ -129,31 +164,15 @@ export default {
       positionId: ''
     }
   },
-  validations: {
-    name: {
-      required
-    },
-    email: {
-      required,
-      email
-    },
-    phone: {
-      required,
-      minLength: minLength(19)
-    },
-    selectedPosition: {
-      required
-    },
-    file: {
-      required
-    }
-  },
   computed: {
     positions() {
       return this.$store.state.positions;
     },
     loading() {
       return this.$store.state.loading
+    },
+    isFormValid () {
+      return !Object.keys(this.fields).some(key => this.fields[key].invalid)
     }
   },
   methods: {
@@ -162,7 +181,6 @@ export default {
     },
     closeSelect() {
       this.opsenSelect = false;
-      this.$v.selectedPosition.$touch()
     },
     changeSelectedPosition(position, id) {
       this.selectedPosition = position;
@@ -171,7 +189,7 @@ export default {
     },
     handleFileChange() {
       this.file = this.$refs.file.files[0];
-      this.$v.file.$touch()
+      this.$refs.file.blur();
     },
     onSubmit() {
       let formData = new FormData();
@@ -186,6 +204,8 @@ export default {
   },
   created() {
     this.$store.dispatch('getPositions');
+    // add custom validator
+    this.$validator.extend('mindimensions', minDimensionsRule);
   }
 }
 </script>
@@ -438,6 +458,14 @@ $font2: 'Source Sans Pro', sans-serif;
   }
   .registration__lbl {
     color: #f44336;
+  }
+  &.custom-file-label {
+    border-color: #f44336;
+
+  }
+  &.custom-file-label:focus {
+    border-color: #f44336;
+    box-shadow: 0 0 0 1px #f44336 inset;
   }
 }
 </style>
